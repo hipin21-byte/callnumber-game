@@ -96,6 +96,24 @@
     .footnote{font-size:11px;color:#7a858c;line-height:1.6;margin-top:12px}
     @media(max-width:1100px){.grid{grid-template-columns:1fr}.sidebar{position:static}.controls{grid-template-columns:repeat(3,1fr)}.shelf{grid-template-columns:repeat(5,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:650px){.app{padding:12px}.hero{grid-template-columns:1fr}.hero-badge{justify-self:start}.controls{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.shelf{grid-template-columns:repeat(2,1fr)}.mistakes{grid-template-columns:1fr}.result-top{grid-template-columns:1fr}.score-ring{margin:auto}.answer-grid{grid-template-columns:repeat(2,1fr)}}
+
+    body.drag-autoscroll-up::before,
+    body.drag-autoscroll-down::after{
+      content:"";
+      position:fixed;
+      left:0;right:0;height:72px;
+      z-index:9998;
+      pointer-events:none;
+    }
+    body.drag-autoscroll-up::before{
+      top:0;
+      background:linear-gradient(to bottom,rgba(35,79,116,.20),transparent);
+    }
+    body.drag-autoscroll-down::after{
+      bottom:0;
+      background:linear-gradient(to top,rgba(35,79,116,.20),transparent);
+    }
+
   </style>
   <script src="config.js"></script>
 </head>
@@ -106,7 +124,7 @@
       <h1>청구기호 서가 정렬 연습</h1>
       <p>가상 도서 50권을 실제 서가처럼 배열하고, 채점·오답 이유·정답 위치를 즉시 확인합니다. 정답 순번을 유추할 수 있는 책 번호는 표시하지 않습니다. 채점 결과는 관리자용 점수판에 전송할 수 있습니다.</p>
     </div>
-    <div class="hero-badge">대학도서관 근로학생 교육용 · v2.0</div>
+    <div class="hero-badge">대학도서관 근로학생 교육용 · v2.2</div>
   </header>
 
   <div class="grid">
@@ -120,6 +138,14 @@
         <li>분류기호는 작은 번호에서 큰 번호로</li>
       </ol>
       <div class="rule-box">
+        <div style="font-weight:900;font-size:13px">국내서·동양서 도서기호 규칙</div>
+        <div class="sequence">
+          저자 성의 첫 자음 + 저자명에 해당하는 숫자 + <b>서명 첫 글자의 초성</b><br>
+          예) <b>토지 / 박경리 → ㅂ172ㅌ</b><br>
+          ※ 따라서 가상 도서도 서명 첫 글자의 초성과 도서기호 끝 초성이 반드시 일치하도록 구성했습니다.
+        </div>
+      </div>
+      <div class="rule-box">
         <div style="font-weight:900;font-size:13px">이 게임에서 특히 연습하는 것</div>
         <div class="sequence">분류기호 → 도서기호 → 번역서 K기호 → 권호(v.) → 복본(c.) → 기타 부차기호의 비교</div>
       </div>
@@ -131,9 +157,9 @@
       </details>
       <details>
         <summary>조작 방법</summary>
-        <div class="sequence">① 책을 드래그해 원하는 위치로 이동하거나<br>② 책 2권을 차례로 클릭해 서로 교환합니다.<br>③ “힌트”는 가장 먼저 발견되는 역순 1곳을 알려줍니다.</div>
+        <div class="sequence">① 책을 드래그해 원하는 위치로 이동하거나<br>② 책 2권을 차례로 클릭해 서로 교환합니다.<br>③ 화면 맨 위·아래로 책을 끌면 페이지가 자동 스크롤됩니다.<br>④ “힌트”는 가장 먼저 발견되는 역순 1곳을 알려줍니다.</div>
       </details>
-      <p class="footnote"><b>v2.0:</b> 관리자 점수 수집 기능을 추가했습니다. 학생이 채점하면 이름·선택 입력한 학번·문제수·점수·정확한 위치·역순 관계·힌트·소요시간이 관리자용 점수판으로 전송됩니다. 정답 유추용 책 번호는 표시하지 않습니다.</p>
+      <p class="footnote"><b>v2.2:</b> 국내서·동양서 가상 도서의 서명 초성과 도서기호 끝 초성을 맞췄고, 드래그 중 화면 상·하단 가장자리에 접근하면 페이지가 자동 스크롤되도록 개선했습니다. 학생이 채점하면 이름·선택 입력한 학번·문제수·점수·정확한 위치·역순 관계·힌트·소요시간이 관리자용 점수판으로 전송됩니다. 정답 유추용 책 번호는 표시하지 않습니다.</p>
     </aside>
 
     <main>
@@ -203,10 +229,10 @@ const BOOKS = [
   {rank:1,id:'b01',title:'디지털 정보의 이해',call:['004.5','ㄱ110ㄷ']},
   {rank:2,id:'b02',title:'컴퓨팅 사고와 문제해결',call:['005.1','A100a']},
   {rank:3,id:'b03',title:'알고리즘의 이해',call:['005.1','A100b']},
-  {rank:4,id:'b04',title:'프로그래밍 사고',call:['005.1','ㄱ100ㄱ']},
-  {rank:5,id:'b05',title:'자료구조의 원리',call:['005.12','ㄱ120ㅂ']},
+  {rank:4,id:'b04',title:'기초 프로그래밍',call:['005.1','ㄱ100ㄱ']},
+  {rank:5,id:'b05',title:'비전공자를 위한 자료구조',call:['005.12','ㄱ120ㅂ']},
   {rank:6,id:'b06',title:'프로그래밍과 논리',call:['005.133','ㄱ123ㅍ']},
-  {rank:7,id:'b07',title:'철학과 삶',call:['100','ㄱ200ㅅ']},
+  {rank:7,id:'b07',title:'삶과 철학',call:['100','ㄱ200ㅅ']},
 
   {rank:8,id:'b08',title:'삶의 균형',call:['199.1','v887','d']},
   {rank:9,id:'b09',title:'일상의 철학',call:['199.1','v887','d','Kㄱ']},
@@ -217,45 +243,45 @@ const BOOKS = [
   {rank:14,id:'b14',title:'행복의 질문',call:['199.1','v887','dl','Kㄱ']},
 
   {rank:15,id:'b15',title:'사회현상의 이해',call:['300.1','B210a']},
-  {rank:16,id:'b16',title:'사회와 문화',call:['300.1','ㄱ210ㄱ']},
+  {rank:16,id:'b16',title:'공동체와 사회',call:['300.1','ㄱ210ㄱ']},
   {rank:17,id:'b17',title:'경제를 보는 눈',call:['320.1','ㄱ250ㄱ']},
-  {rank:18,id:'b18',title:'시장과 선택',call:['320.1','ㄱ250ㄴ']},
-  {rank:19,id:'b19',title:'생활 속 경제',call:['320.1','ㄱ250ㄷ']},
+  {rank:18,id:'b18',title:'노동과 시장',call:['320.1','ㄱ250ㄴ']},
+  {rank:19,id:'b19',title:'돈과 생활경제',call:['320.1','ㄱ250ㄷ']},
   {rank:20,id:'b20',title:'과학적 사고',call:['500','ㄴ300ㄱ']},
   {rank:21,id:'b21',title:'문학의 이해',call:['800','A300a']},
-  {rank:22,id:'b22',title:'문학과 인간',call:['800','ㄱ300ㄱ']},
+  {rank:22,id:'b22',title:'고전문학과 인간',call:['800','ㄱ300ㄱ']},
 
-  {rank:23,id:'b23',title:'시와 언어',call:['811.6','ㅂ120ㅈ']},
-  {rank:24,id:'b24',title:'한국시의 풍경',call:['811.6','ㅂ120ㅈ2']},
-  {rank:25,id:'b25',title:'시 읽기의 즐거움',call:['811.6','ㅂ120자']},
-  {rank:26,id:'b26',title:'현대시 산책',call:['811.6','ㅂ120장']},
-  {rank:27,id:'b27',title:'서정의 세계',call:['811.6','ㅂ120자ㅎ']},
-  {rank:28,id:'b28',title:'시적 상상력',call:['811.6','ㅂ120장ㅎ']},
+  {rank:23,id:'b23',title:'자연과 시',call:['811.6','ㅂ120ㅈ']},
+  {rank:24,id:'b24',title:'작품으로 읽는 한국시',call:['811.6','ㅂ120ㅈ2']},
+  {rank:25,id:'b25',title:'자아와 시',call:['811.6','ㅂ120자']},
+  {rank:26,id:'b26',title:'장면과 시',call:['811.6','ㅂ120장']},
+  {rank:27,id:'b27',title:'자화상과 서정',call:['811.6','ㅂ120자ㅎ']},
+  {rank:28,id:'b28',title:'장흥의 시인들',call:['811.6','ㅂ120장ㅎ']},
 
-  {rank:29,id:'b29',title:'소설의 시간',call:['813.7','ㄱ123저','Kㄱ']},
-  {rank:30,id:'b30',title:'이야기의 숲',call:['813.7','ㄱ123저','Kㄴ']},
-  {rank:31,id:'b31',title:'서사의 길',call:['813.7','ㄱ123저','Kㄷ']},
-  {rank:32,id:'b32',title:'현대소설 읽기',call:['813.7','ㄱ123저','v.1']},
-  {rank:33,id:'b33',title:'한국소설의 장면',call:['813.7','ㄱ123저','c.2']},
-  {rank:34,id:'b34',title:'소설과 사회',call:['813.7','ㄱ123저','c.3']},
-  {rank:35,id:'b35',title:'이야기의 결',call:['813.7','ㄱ123저','상']},
-  {rank:36,id:'b36',title:'소설의 창',call:['813.7','ㄱ123저','上']},
+  {rank:29,id:'b29',title:'저녁의 소설 : 번역 A',call:['813.7','ㄱ123저','Kㄱ']},
+  {rank:30,id:'b30',title:'저녁의 소설 : 번역 B',call:['813.7','ㄱ123저','Kㄴ']},
+  {rank:31,id:'b31',title:'저녁의 소설 : 번역 C',call:['813.7','ㄱ123저','Kㄷ']},
+  {rank:32,id:'b32',title:'저녁의 소설 제1권',call:['813.7','ㄱ123저','v.1']},
+  {rank:33,id:'b33',title:'저녁의 소설 복본 2',call:['813.7','ㄱ123저','c.2']},
+  {rank:34,id:'b34',title:'저녁의 소설 복본 3',call:['813.7','ㄱ123저','c.3']},
+  {rank:35,id:'b35',title:'저녁의 소설 상',call:['813.7','ㄱ123저','상']},
+  {rank:36,id:'b36',title:'저녁의 소설 上',call:['813.7','ㄱ123저','上']},
 
-  {rank:37,id:'b37',title:'역사와 기록',call:['912.03','ㅅ138ㅈ']},
-  {rank:38,id:'b38',title:'동아시아사 탐구',call:['912.03','ㅅ138ㅈ2']},
-  {rank:39,id:'b39',title:'한국사 자료읽기',call:['912.03','ㅅ138자']},
-  {rank:40,id:'b40',title:'시간의 흔적',call:['912.03','ㅅ138장']},
-  {rank:41,id:'b41',title:'문화유산과 역사',call:['912.03','ㅅ138자ㅎ']},
-  {rank:42,id:'b42',title:'역사 속 인물',call:['912.03','ㅅ138자흐']},
-  {rank:43,id:'b43',title:'역사적 사고',call:['912.03','ㅅ138자흥']},
-  {rank:44,id:'b44',title:'사료 읽는 법',call:['912.03','ㅅ138장ㅎ']},
-  {rank:45,id:'b45',title:'역사와 사회',call:['912.03','ㅅ138장흐']},
-  {rank:46,id:'b46',title:'과거의 재구성',call:['912.03','ㅅ138장흥']},
+  {rank:37,id:'b37',title:'조선의 기록',call:['912.03','ㅅ138ㅈ']},
+  {rank:38,id:'b38',title:'조선의 기록 2',call:['912.03','ㅅ138ㅈ2']},
+  {rank:39,id:'b39',title:'자료로 읽는 한국사',call:['912.03','ㅅ138자']},
+  {rank:40,id:'b40',title:'장면으로 읽는 역사',call:['912.03','ㅅ138장']},
+  {rank:41,id:'b41',title:'자화상으로 보는 역사',call:['912.03','ㅅ138자ㅎ']},
+  {rank:42,id:'b42',title:'자흐라의 역사',call:['912.03','ㅅ138자흐']},
+  {rank:43,id:'b43',title:'자흥의 문화사',call:['912.03','ㅅ138자흥']},
+  {rank:44,id:'b44',title:'장한 시대의 기록',call:['912.03','ㅅ138장ㅎ']},
+  {rank:45,id:'b45',title:'장흐의 역사기행',call:['912.03','ㅅ138장흐']},
+  {rank:46,id:'b46',title:'장흥의 역사문화',call:['912.03','ㅅ138장흥']},
 
   {rank:47,id:'b47',title:'세계사의 장면',call:['912.04','A100a']},
   {rank:48,id:'b48',title:'세계사의 흐름',call:['912.04','A100b']},
-  {rank:49,id:'b49',title:'문명과 교류',call:['912.04','ㄱ100ㄱ']},
-  {rank:50,id:'b50',title:'세계사와 문화',call:['912.04','ㄱ100ㄴ']}
+  {rank:49,id:'b49',title:'교류로 보는 문명',call:['912.04','ㄱ100ㄱ']},
+  {rank:50,id:'b50',title:'나라와 세계사',call:['912.04','ㄱ100ㄴ']}
 ];
 
 const palette=['#f3e8cf','#e3ecf2','#e9e3f0','#e8efe0','#f1dfd8','#dfe9e5','#eee8dc','#e4e8f0'];
@@ -268,6 +294,43 @@ let startedAt=Date.now();
 let timer=null;
 let lastResult=null;
 let bookColors={};
+
+let autoScrollRaf=null;
+let autoScrollSpeed=0;
+const AUTO_SCROLL_EDGE=110;
+const AUTO_SCROLL_MAX_SPEED=24;
+
+
+const CHOSEONG=['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function getChoseong(text){
+  const ch=String(text||'').trim().charAt(0);
+  if(!ch) return '';
+  const code=ch.charCodeAt(0);
+  if(code>=0xAC00 && code<=0xD7A3) return CHOSEONG[Math.floor((code-0xAC00)/588)];
+  if(/[ㄱ-ㅎ]/.test(ch)) return ch;
+  return ch.toUpperCase();
+}
+function getTitleMarkFromBookNumber(book){
+  const s=String(book.call?.[1]||'');
+  // 국내서·동양서 형태 예: ㅂ172ㅌ, ㄱ110ㄷ, ㅅ138자
+  const m=s.match(/^[ㄱ-ㅎ가-힣]\d+([ㄱ-ㅎ가-힣])/);
+  return m ? getChoseong(m[1]) : null;
+}
+function validateDomesticBookData(){
+  const mismatches=[];
+  BOOKS.forEach(book=>{
+    const mark=getTitleMarkFromBookNumber(book);
+    if(!mark) return; // 영문 저자기호 등은 이 검사에서 제외
+    const titleCho=getChoseong(book.title);
+    if(mark!==titleCho) mismatches.push({title:book.title,call:book.call.join(' / '),titleCho,mark});
+  });
+  if(mismatches.length){
+    console.error('국내서·동양서 서명 초성/도서기호 불일치:',mismatches);
+  }else{
+    console.info('국내서·동양서 서명 초성 검증 완료: 모두 일치합니다.');
+  }
+  return mismatches;
+}
 
 const $=id=>document.getElementById(id);
 const callText=b=>b.call.join(' / ');
@@ -318,21 +381,81 @@ function render(){
       const lines=b.call.map(x=>`<span class="call-line">${escapeHtml(x)}</span>`).join('');
       card.innerHTML=`<div class="pos"><span>현재 ${idx+1}번</span></div><div class="title">${escapeHtml(b.title)}</div><div class="call">${lines}</div><div class="micro">드래그 또는 2권 클릭 교환</div>`;
       card.addEventListener('click',()=>selectOrSwap(b.id));
-      card.addEventListener('dragstart',e=>{dragId=b.id;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',b.id)});
-      card.addEventListener('dragend',()=>{dragId=null;card.classList.remove('dragging')});
+      card.addEventListener('dragstart',e=>{
+        dragId=b.id;
+        stopDragAutoScroll();
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed='move';
+        e.dataTransfer.setData('text/plain',b.id);
+      });
+      card.addEventListener('dragend',()=>{
+        stopDragAutoScroll();
+        dragId=null;
+        card.classList.remove('dragging');
+      });
       card.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move'});
-      card.addEventListener('drop',e=>{e.preventDefault();const from=e.dataTransfer.getData('text/plain')||dragId;if(from&&from!==b.id) moveBefore(from,b.id)});
+      card.addEventListener('drop',e=>{e.preventDefault();stopDragAutoScroll();const from=e.dataTransfer.getData('text/plain')||dragId;if(from&&from!==b.id) moveBefore(from,b.id)});
       shelf.appendChild(card);
     });
     shelf.addEventListener('dragover',e=>e.preventDefault());
     shelf.addEventListener('drop',e=>{
       if(e.target!==shelf)return;
-      e.preventDefault();const from=e.dataTransfer.getData('text/plain')||dragId;if(from) moveToEndOfShelf(from,s);
+      e.preventDefault();stopDragAutoScroll();const from=e.dataTransfer.getData('text/plain')||dragId;if(from) moveToEndOfShelf(from,s);
     });
     host.appendChild(shelf);
   }
 }
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
+function updateDragAutoScroll(clientY){
+  if(!dragId) return;
+
+  const h=window.innerHeight || document.documentElement.clientHeight;
+  const edge=Math.min(AUTO_SCROLL_EDGE,Math.max(70,h*0.18));
+  let speed=0;
+
+  if(clientY < edge){
+    const ratio=(edge-clientY)/edge;
+    speed=-Math.max(4,Math.round(AUTO_SCROLL_MAX_SPEED*ratio));
+  }else if(clientY > h-edge){
+    const ratio=(clientY-(h-edge))/edge;
+    speed=Math.max(4,Math.round(AUTO_SCROLL_MAX_SPEED*ratio));
+  }
+
+  autoScrollSpeed=speed;
+
+  document.body.classList.toggle('drag-autoscroll-up',speed<0);
+  document.body.classList.toggle('drag-autoscroll-down',speed>0);
+
+  if(speed!==0 && !autoScrollRaf){
+    const step=()=>{
+      if(!dragId || autoScrollSpeed===0){
+        autoScrollRaf=null;
+        return;
+      }
+      window.scrollBy(0,autoScrollSpeed);
+      autoScrollRaf=requestAnimationFrame(step);
+    };
+    autoScrollRaf=requestAnimationFrame(step);
+  }
+}
+
+function stopDragAutoScroll(){
+  autoScrollSpeed=0;
+  if(autoScrollRaf){
+    cancelAnimationFrame(autoScrollRaf);
+    autoScrollRaf=null;
+  }
+  document.body.classList.remove('drag-autoscroll-up','drag-autoscroll-down');
+}
+
+// 드래그한 책을 화면 위/아래 가장자리로 가져가면 페이지가 자동 스크롤됩니다.
+document.addEventListener('dragover',e=>{
+  if(dragId) updateDragAutoScroll(e.clientY);
+});
+document.addEventListener('drop',stopDragAutoScroll);
+document.addEventListener('dragend',stopDragAutoScroll);
+
 function invalidateResult(){
   lastResult=null;
   $('results').classList.remove('show');
@@ -524,6 +647,7 @@ $('gradeBtn').addEventListener('click',grade);
 $('answerBtn').addEventListener('click',toggleAnswer);
 $('csvBtn').addEventListener('click',csv);
 $('mode').addEventListener('change',newGame);
+validateDomesticBookData();
 newGame();
 </script>
 <div style="max-width:1200px;margin:0 auto 24px;padding:0 16px;text-align:right">
