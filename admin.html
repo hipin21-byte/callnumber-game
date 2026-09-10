@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>청구기호 훈련 관리자 점수판</title>
+<script src="config.js"></script>
+<style>
+:root{--bg:#f4f1e9;--paper:#fffdf8;--ink:#2e241b;--muted:#71675d;--line:#ddd4c7;--accent:#6f4a2d;--ok:#2f6f4e;--bad:#a33a2b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,"Noto Sans KR",Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px}.head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
+h1{margin:0;font-size:28px}p{color:var(--muted)}.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 6px 20px rgba(54,40,25,.06)}
+.login{display:grid;grid-template-columns:1fr auto;gap:10px}.login input,.toolbar input,.toolbar select{padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:white}
+button{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer;background:var(--accent);color:white}.ghost{background:#ece6dd;color:var(--ink)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0}.stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px}.stat b{display:block;font-size:24px;margin-top:5px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.tablewrap{overflow:auto;background:white;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:980px}th,td{padding:10px 12px;border-bottom:1px solid #eee8df;text-align:left;font-size:13px}th{position:sticky;top:0;background:#f5efe6;z-index:1}tr:hover td{background:#fffaf1}
+.score{font-weight:900}.good{color:var(--ok)}.bad{color:var(--bad)}#msg{font-size:13px;font-weight:700;margin-top:10px}.hidden{display:none}
+@media(max-width:760px){.stats{grid-template-columns:1fr 1fr}.head{display:block}.login{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div><h1>청구기호 훈련 관리자 점수판</h1><p>근로학생별 시도 기록, 점수, 정확도, 힌트 사용, 소요시간을 확인합니다.</p></div>
+    <a href="index.html" style="color:#6f4a2d;font-weight:800;text-decoration:none">게임으로 돌아가기</a>
+  </div>
+  <div class="card">
+    <div class="login">
+      <input type="password" id="adminKey" placeholder="관리자 키 입력">
+      <button id="loadBtn">점수 불러오기</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="stats">
+      <div class="stat">전체 시도<b id="sAttempts">0</b></div>
+      <div class="stat">참여 학생<b id="sStudents">0</b></div>
+      <div class="stat">평균 점수<b id="sAvg">0</b></div>
+      <div class="stat">만점 횟수<b id="sPerfect">0</b></div>
+      <div class="stat">평균 시간<b id="sTime">0:00</b></div>
+    </div>
+    <div class="toolbar">
+      <input id="q" placeholder="이름/학번 검색">
+      <select id="mode"><option value="">전체 난이도</option><option value="10">10권</option><option value="25">25권</option><option value="50">50권</option></select>
+      <button class="ghost" id="csvBtn">CSV 다운로드</button>
+      <button class="ghost" id="refreshBtn">새로고침</button>
+    </div>
+    <div class="tablewrap">
+      <table><thead><tr>
+        <th>일시</th><th>학생</th><th>학번/번호</th><th>문제수</th><th>점수</th><th>정확 위치</th><th>역순</th><th>힌트</th><th>시간</th><th>만점</th>
+      </tr></thead><tbody id="tbody"></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+let rows=[];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=s=>{s=Number(s||0);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
+function apiReady(){return typeof window.CALLNUMBER_API_URL==='string'&&window.CALLNUMBER_API_URL.startsWith('http')}
+function loadScores(){
+  const key=$('adminKey').value.trim();
+  if(!key){$('msg').textContent='관리자 키를 입력하세요.';return}
+  if(!apiReady()){$('msg').textContent='config.js에 Apps Script 웹앱 주소를 먼저 설정해야 합니다.';return}
+  $('msg').textContent='불러오는 중...';
+  const cb='scoreCb_'+Date.now();
+  window[cb]=data=>{
+    try{
+      if(!data||data.ok!==true) throw new Error(data?.error||'조회 실패');
+      rows=data.rows||[];
+      $('dashboard').classList.remove('hidden');
+      $('msg').textContent=`${rows.length}건을 불러왔습니다.`;
+      render();
+    }catch(e){$('msg').textContent='조회 실패: '+e.message}
+    finally{delete window[cb];document.getElementById(cb)?.remove()}
+  };
+  const s=document.createElement('script');s.id=cb;
+  s.src=window.CALLNUMBER_API_URL+'?action=list&key='+encodeURIComponent(key)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();
+  s.onerror=()=>{$('msg').textContent='서버 연결에 실패했습니다.';delete window[cb];s.remove()};
+  document.body.appendChild(s);
+}
+function filtered(){
+  const q=$('q').value.trim().toLowerCase(),m=$('mode').value;
+  return rows.filter(r=>(!q||`${r.student} ${r.studentNo}`.toLowerCase().includes(q))&&(!m||String(r.mode)===m));
+}
+function render(){
+  const a=filtered(); const n=a.length;
+  $('sAttempts').textContent=n;
+  $('sStudents').textContent=new Set(a.map(r=>`${r.student}|${r.studentNo||''}`)).size;
+  $('sAvg').textContent=n?(a.reduce((s,r)=>s+Number(r.score||0),0)/n).toFixed(1):'0';
+  $('sPerfect').textContent=a.filter(r=>String(r.perfect)==='Y'||Number(r.score)===100).length;
+  $('sTime').textContent=fmt(n?Math.round(a.reduce((s,r)=>s+Number(r.seconds||0),0)/n):0);
+  $('tbody').innerHTML=a.map(r=>`<tr>
+    <td>${esc(r.timestamp)}</td><td><b>${esc(r.student)}</b></td><td>${esc(r.studentNo)}</td><td>${esc(r.mode)}</td>
+    <td class="score ${Number(r.score)>=80?'good':'bad'}">${Number(r.score).toFixed(1)}</td>
+    <td>${esc(r.exact)}/${esc(r.mode)}</td><td>${esc(r.inversions)}</td><td>${esc(r.hints)}</td><td>${fmt(r.seconds)}</td><td>${esc(r.perfect)}</td>
+  </tr>`).join('');
+}
+function csv(){
+  const a=filtered(), head=['일시','학생','학번/번호','문제수','점수','정확 위치','역순','힌트','시간(초)','만점'];
+  const data=[head,...a.map(r=>[r.timestamp,r.student,r.studentNo,r.mode,r.score,r.exact,r.inversions,r.hints,r.seconds,r.perfect])];
+  const text='\ufeff'+data.map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob=new Blob([text],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(blob),aTag=document.createElement('a');
+  aTag.href=u;aTag.download='청구기호_훈련_전체점수.csv';aTag.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+$('loadBtn').onclick=loadScores;$('refreshBtn').onclick=loadScores;$('q').oninput=render;$('mode').onchange=render;$('csvBtn').onclick=csv;
+$('adminKey').addEventListener('keydown',e=>{if(e.key==='Enter')loadScores()});
+</script>
+</body></html>
